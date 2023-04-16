@@ -2,9 +2,14 @@ import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 
 import { auth } from "../firebase/firebase";
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 
-const provider = new GoogleAuthProvider()
+const provider = new GoogleAuthProvider();
 
 const RegisterForm = () => {
   const [username, setUsername] = useState(null);
@@ -12,6 +17,7 @@ const RegisterForm = () => {
   const [password, setPassword] = useState(null);
 
   const signupHandler = async () => {
+    // if all the entries are not filled then return the user from here
     if (!email || !username || !password) return;
     try {
       const user = await createUserWithEmailAndPassword(auth, email, password);
@@ -24,10 +30,14 @@ const RegisterForm = () => {
     }
   };
 
-  const signInWithGoogle = async() => {
-    const user = await signInWithPopup(auth,provider)
-    console.log(user)
-  }
+  const signInWithGoogle = async () => {
+    try {
+      const user = await signInWithPopup(auth, provider);
+      console.log(user);
+    } catch (error) {
+      console.log("An error occured", error);
+    }
+  };
 
   return (
     <main className="flex lg:h-[100vh]">
@@ -41,7 +51,10 @@ const RegisterForm = () => {
             </span>
           </p>
 
-          <div className="bg-black/[0.05] text-white w-full py-4 mt-10 rounded-full transition-transform hover:bg-black/[0.8] active:scale-90 flex justify-center items-center gap-4 cursor-pointer group" onClick={signInWithGoogle}>
+          <div
+            className="bg-black/[0.05] text-white w-full py-4 mt-10 rounded-full transition-transform hover:bg-black/[0.8] active:scale-90 flex justify-center items-center gap-4 cursor-pointer group"
+            onClick={signInWithGoogle}
+          >
             <FcGoogle size={22} />
             <span className="font-medium text-black group-hover:text-white">
               Login with Google
