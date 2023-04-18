@@ -19,7 +19,7 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore";
-import { db } from "@/firebase/firebase";
+import { db } from "../firebase/firebase";
 
 export default function Home() {
   const [todoInput, setTodoInput] = useState("");
@@ -32,6 +32,11 @@ export default function Home() {
     if (!isLoading && !authUser) {
       router.push("/login");
     }
+
+    // if user is logged in
+    if (!!authUser) {
+      fetchTodos(authUser.uid);
+    }
   }, [authUser, isLoading]);
 
   const addTodo = async () => {
@@ -41,12 +46,26 @@ export default function Home() {
         content: todoInput,
         completed: false,
       });
+      fetchTodos(authUser.uid)
+      setTodoInput("")
     } catch (error) {
       console.log(error);
     }
   };
 
-  
+  const fetchTodos = async (uid) => {
+    try {
+      const q = query(collection(db, "todos"), where("owner", "==", uid));
+      const querySnapshot = await getDocs(q);
+      let data = [];
+      querySnapshot.forEach((todo) => {
+        data.push({ ...todo.data(), id: todo.id });
+      });
+      setTodos(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return !authUser ? (
     <Loader />
@@ -83,16 +102,17 @@ export default function Home() {
           </div>
         </div>
         <div className="my-10">
-          {arr.map((todo, index) => (
-            <div className="flex items-center justify-between mt-4">
+          {todos.length > 0 && todos.map((todo, index) => (
+            <div key={todo.id} className="flex items-center justify-between mt-4">
               <div className="flex items-center gap-3">
                 <input
-                  id={`todo-${index}`}
+                  id={`todo-${todo.id}`}
                   type="checkbox"
                   className="w-4 h-4 accent-green-400 rounded-lg"
+                  checked={todo.completed}
                 />
-                <label htmlFor={`todo-${index}`} className="font-medium">
-                  This is my first todo
+                <label htmlFor={`todo-${todo.id}`} className="font-medium">
+                  {todo.content}
                 </label>
               </div>
 
