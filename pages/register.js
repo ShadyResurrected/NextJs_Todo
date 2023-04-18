@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 
 import { auth } from "../firebase/firebase";
@@ -9,12 +9,26 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 
+import { useAuth } from "@/firebase/auth";
+import { useRouter } from "next/router";
+import Loader from "@/components/Loader";
+import Link from "next/link";
+
 const provider = new GoogleAuthProvider();
 
 const RegisterForm = () => {
+  const router = useRouter();
   const [username, setUsername] = useState(null);
   const [email, setEmail] = useState(null);
   const [password, setPassword] = useState(null);
+  const { authUser, isLoading, setAuthUser } = useAuth();
+
+  useEffect(() => {
+    // if user is already logged the redirect to the login page
+    if (!isLoading && authUser) {
+      router.push("/");
+    }
+  }, [authUser, isLoading]);
 
   const signupHandler = async () => {
     // if all the entries are not filled then return the user from here
@@ -25,6 +39,11 @@ const RegisterForm = () => {
       await updateProfile(auth.currentUser, {
         displayName: username,
       });
+      setAuthUser({
+        uid : user.uid,
+        email : user.email,
+        username
+      })
     } catch (error) {
       console.log("An error occured", error);
     }
@@ -39,16 +58,18 @@ const RegisterForm = () => {
     }
   };
 
-  return (
+  return isLoading || (!isLoading && authUser) ? (
+    <Loader />
+  ) : (
     <main className="flex lg:h-[100vh]">
       <div className="w-full lg:w-[60%] p-8 md:p-14 flex items-center justify-center lg:justify-start">
         <div className="p-8 w-[600px]">
           <h1 className="text-6xl font-semibold">Sign Up</h1>
           <p className="mt-6 ml-1">
             Already have an account ?{" "}
-            <span className="underline hover:text-blue-400 cursor-pointer">
+            <Link href='/login' className="underline hover:text-blue-400 cursor-pointer">
               Login
-            </span>
+            </Link>
           </p>
 
           <div
