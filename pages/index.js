@@ -8,9 +8,22 @@ const arr = [
 import { useAuth } from "@/firebase/auth";
 import { useRouter } from "next/router";
 import Loader from "@/components/Loader";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  where,
+  query,
+  deleteDoc,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
+import { db } from "@/firebase/firebase";
 
 export default function Home() {
+  const [todoInput, setTodoInput] = useState("");
+  const [todos, setTodos] = useState([]);
   const { authUser, isLoading, signOut } = useAuth();
   const router = useRouter();
 
@@ -20,6 +33,21 @@ export default function Home() {
       router.push("/login");
     }
   }, [authUser, isLoading]);
+
+  const addTodo = async () => {
+    try {
+      const docRef = await addDoc(collection(db, "todos"), {
+        owner: authUser.uid,
+        content: todoInput,
+        completed: false,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  
+
   return !authUser ? (
     <Loader />
   ) : (
@@ -43,8 +71,13 @@ export default function Home() {
               type="text"
               className="font-semibold placeholder:text-gray-500 border-[2px] border-black h-[60px] grow shadow-sm rounded-md px-4 focus-visible:outline-yellow-400 text-lg transition-all duration-300"
               autoFocus
+              value={todoInput}
+              onChange={(e) => setTodoInput(e.target.value)}
             />
-            <button className="w-[60px] h-[60px] rounded-md bg-black flex justify-center items-center cursor-pointer transition-all duration-300 hover:bg-black/[0.8]">
+            <button
+              className="w-[60px] h-[60px] rounded-md bg-black flex justify-center items-center cursor-pointer transition-all duration-300 hover:bg-black/[0.8]"
+              onClick={addTodo}
+            >
               <AiOutlinePlus size={30} color="#fff" />
             </button>
           </div>
