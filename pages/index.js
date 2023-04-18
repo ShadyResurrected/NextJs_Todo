@@ -21,6 +21,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 
+import {toast} from 'react-hot-toast'
+
 export default function Home() {
   const [todoInput, setTodoInput] = useState("");
   const [todos, setTodos] = useState([]);
@@ -46,9 +48,22 @@ export default function Home() {
         content: todoInput,
         completed: false,
       });
-      fetchTodos(authUser.uid)
-      setTodoInput("")
+      fetchTodos(authUser.uid);
+      setTodoInput("");
+      toast.success("Added todo successfully!")
     } catch (error) {
+      toast.error("Something went wrong!")
+      console.log(error);
+    }
+  };
+
+  const deleteTodo = async (docId) => {
+    try {
+      await deleteDoc(doc(db, "todos", docId));
+      fetchTodos(authUser.uid);
+      toast.success("Deleted todo successfully!")
+    } catch (error) {
+      toast.error("Something went wrong!")
       console.log(error);
     }
   };
@@ -63,9 +78,30 @@ export default function Home() {
       });
       setTodos(data);
     } catch (error) {
+      toast.error("Something went wrong!")
       console.log(error);
     }
   };
+
+  const markAsCompletedHandler = async(e, docId) => {
+    try {
+      const docRef = doc(db,"todos", docId)
+      await updateDoc(docRef, {
+        completed : e.target.checked
+      })
+      fetchTodos(authUser.uid)
+      toast.success("Updated todo successfully!")
+    } catch (error) {
+      toast.error("Something went wrong!")
+      console.log(error)
+    }
+  }
+
+  const onKeyUp = (e) => {
+    if(e.key === "Enter" && todoInput.length > 0){
+      addTodo()
+    }
+  }
 
   return !authUser ? (
     <Loader />
@@ -86,12 +122,13 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2 mt-10">
             <input
-              placeholder={`👋 Hello name, What to do Today?`}
+              placeholder={`👋 Hello ${authUser.username}, What to do Today?`}
               type="text"
               className="font-semibold placeholder:text-gray-500 border-[2px] border-black h-[60px] grow shadow-sm rounded-md px-4 focus-visible:outline-yellow-400 text-lg transition-all duration-300"
               autoFocus
               value={todoInput}
               onChange={(e) => setTodoInput(e.target.value)}
+              onKeyUp={onKeyUp}
             />
             <button
               className="w-[60px] h-[60px] rounded-md bg-black flex justify-center items-center cursor-pointer transition-all duration-300 hover:bg-black/[0.8]"
@@ -102,28 +139,34 @@ export default function Home() {
           </div>
         </div>
         <div className="my-10">
-          {todos.length > 0 && todos.map((todo, index) => (
-            <div key={todo.id} className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-3">
-                <input
-                  id={`todo-${todo.id}`}
-                  type="checkbox"
-                  className="w-4 h-4 accent-green-400 rounded-lg"
-                  checked={todo.completed}
-                />
-                <label htmlFor={`todo-${todo.id}`} className="font-medium">
-                  {todo.content}
-                </label>
-              </div>
+          {todos.length > 0 &&
+            todos.map((todo, index) => (
+              <div
+                key={todo.id}
+                className="flex items-center justify-between mt-4"
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    id={`todo-${todo.id}`}
+                    type="checkbox"
+                    className="w-4 h-4 accent-green-400 rounded-lg"
+                    checked={todo.completed}
+                    onChange={(e) => markAsCompletedHandler(e,todo.id)}
+                  />
+                  <label htmlFor={`todo-${todo.id}`} className={`font-medium ${todo.completed ? 'line-through' : ''}`}>
+                    {todo.content}
+                  </label>
+                </div>
 
-              <div className="flex items-center gap-3">
-                <MdDeleteForever
-                  size={24}
-                  className="text-red-400 hover:text-red-600 cursor-pointer"
-                />
+                <div className="flex items-center gap-3">
+                  <MdDeleteForever
+                    size={24}
+                    className="text-red-400 hover:text-red-600 cursor-pointer"
+                    onClick={() => deleteTodo(todo.id)}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     </main>

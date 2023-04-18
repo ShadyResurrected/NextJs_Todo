@@ -14,6 +14,8 @@ import { useRouter } from "next/router";
 import Loader from "@/components/Loader";
 import Link from "next/link";
 
+import {toast} from 'react-hot-toast'
+
 const provider = new GoogleAuthProvider();
 
 const RegisterForm = () => {
@@ -34,17 +36,23 @@ const RegisterForm = () => {
     // if all the entries are not filled then return the user from here
     if (!email || !username || !password) return;
     try {
-      const user = await createUserWithEmailAndPassword(auth, email, password);
+      const { user } = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       // to update the information of user
       await updateProfile(auth.currentUser, {
         displayName: username,
       });
       setAuthUser({
-        uid : user.uid,
-        email : user.email,
-        username
-      })
+        uid: user.uid,
+        email: user.email,
+        username,
+      });
+      toast.success("Registered Successfully!")
     } catch (error) {
+      toast.error("Something went wrong!")
       console.log("An error occured", error);
     }
   };
@@ -52,8 +60,9 @@ const RegisterForm = () => {
   const signInWithGoogle = async () => {
     try {
       const user = await signInWithPopup(auth, provider);
-      console.log(user);
+      toast.success("Registered Successfully!")
     } catch (error) {
+      toast.error("Something went wrong!")
       console.log("An error occured", error);
     }
   };
@@ -67,7 +76,10 @@ const RegisterForm = () => {
           <h1 className="text-6xl font-semibold">Sign Up</h1>
           <p className="mt-6 ml-1">
             Already have an account ?{" "}
-            <Link href='/login' className="underline hover:text-blue-400 cursor-pointer">
+            <Link
+              href="/login"
+              className="underline hover:text-blue-400 cursor-pointer"
+            >
               Login
             </Link>
           </p>

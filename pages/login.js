@@ -12,6 +12,8 @@ import { useRouter } from "next/router";
 import Loader from "@/components/Loader";
 import Link from "next/link";
 
+import toast from 'react-hot-toast';
+
 const provider = new GoogleAuthProvider();
 
 const LoginForm = () => {
@@ -31,8 +33,9 @@ const LoginForm = () => {
     if (!email || !password) return;
     try {
       const user = await signInWithEmailAndPassword(auth, email, password);
-      console.log(user);
+      toast.success("Logged in Successfully!")
     } catch (error) {
+      toast.error("Something went wrong!")
       console.log("An error occurred", error);
     }
   };
@@ -40,8 +43,9 @@ const LoginForm = () => {
   const signInWithGoogle = async () => {
     try {
       const user = await signInWithPopup(auth, provider);
-      console.log(user);
+      toast.success("Logged in Successfully!")
     } catch (error) {
+      toast.error("Something went wrong!")
       console.log("An error occured", error);
     }
   };
